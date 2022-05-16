@@ -1,0 +1,263 @@
+
+---
+title: "Exploring the BRFSS data"
+output:
+    html_document: 
+    fig_height: 4
+    highlight: pygments
+    theme: spacelab
+author: "Roberto Canepa"
+---
+
+## Setup
+
+### Load packages
+
+```{r load-packages, message = FALSE}
+library(ggplot2)
+library(dplyr)
+library(ggthemes)
+library(knitr)
+load("data.Rdata")
+```
+
+### Load data
+
+
+```{rload-data}
+load("brfss2013.RData")
+```
+
+
+
+* * *
+
+## Part 1: Data
+
+The data was collected by means of a household survey of all the states of the USA, along with other sectors of interest. Due mainly to the form of data collection, it is possible to speak of generality, since in each household included in the sample, the person chosen to respond was taken at random. Along with the above, it is also worth highlighting the proportion of the sample between states, where a certain limited range of frequency is observed, understanding that there are states with a larger population than others, but even so they are well represented. 
+
+On the other hand, in order to establish causality, it would be necessary to have some treatment and control group, given a question of interest, as well as randomization in two aspects, in the sampling, which in this case is fulfilled by having the response of a person from the household randomized and by random assignment, which is related to the treatment being applied randomly, so that the differences that may exist between individuals are completely due to random issues. Due to the nature of the variables, it depends on which one we are considering, since when we ask about personal perceptions there may be difficulties in their comparison, so there could be selection bias. 
+* * *
+
+## Part 2: Research questions
+
+**Research question 1:**
+
+How is the surveyed population characterized?
+
+The main purpose of answering this question is related to knowing certain characteristics of the sample such as education, age, employment status, number of children, among others. With this analysis it could be possible to understand the following questions related to mental health and nutrition, having identified the surveyed population. 
+
+
+
+**Research question 2:**
+
+How are the eating habits of the surveyed population? 
+
+Among the healthy habits that a person should have, there is adequate sleep, stress management, and a balanced diet. The latter has been quite affected in part thanks to fast food, understanding that a healthy diet can prevent diseases of the heart, liver or other organs of the digestive system. 
+
+Within the foregoing, the high rates of obesity, both adults and children, are also a concern, where nutrition is a key aspect when preventing overweight in the population. For this question, the variables that can be useful are:
+
+
+#fruit1: How Many Times Did You Eat Fruit?
+
+#fvbeans: How Many Times Did You Eat Beans Or Lentils?
+
+#fvgreen: How Many Times Did You Eat Dark Green Vegetables?
+
+#ssbsugar: How Often Do You Drink Regular Soda Or Pop?
+
+
+**Research question 3:**
+How are the mental health indices? In which states is a greater deterioration observed? 
+
+Mental health has generally been in the background, to the detriment of other health pathologies, such as damage to major organs or musculoskeletal disorders. However, it has been seen that it can negatively affect general well-being, as well as personal satisfaction, productivity, learning, among other aspects. 
+
+Being able to analyze which is the proportion of people with deterioration of their mental health can be useful to determine which are the most common disorders in the human being and some characteristics of these. For this question, the variables that can be useful are: 
+
+#1.menthlth: Number Of Days Mental Health Not Good
+
+#2.addepev2: Ever Told You Had A Depressive Disorder
+
+#3.misnervs: How Often Feel Nervous Past 30 Days
+
+#4.lsatisfy: Satisfaction With Life
+
+
+
+
+## Part 3: Exploratory data analysis
+
+
+**Research question 1:**
+To answer the first question, tables of descriptive statistics and frequencies of the variables of interest are generated. For this question, employment status, number of children, educational level, age and marital status were used. 
+
+```{r}
+t1 <-table(brfss2013$employ1)
+t1<- prop.table(t1)
+a = as.data.frame(t1)
+names(a)[1]="Employ Status"
+names(a)[2]="Frequency"
+kable(a)
+```
+
+It can be seen that a large part of the sample corresponds to salaried workers with 41%, followed by retirees with 28%, self-employed workers with 8%, housewives with 6%. Therefore, there is a prevalence towards people working, be they low salary or independently. 
+
+```{r}
+t2 <-table(brfss2013$educa)
+t2<-prop.table(t2)
+b = as.data.frame(t2)
+names(b)[1]="Educational level"
+names(b)[2]="Frequency"
+kable(b)
+```
+
+The following table shows the educational level of the respondents, it can be seen that a large part of the sample has from high school onwards (technical or university degree), so at first glance it could be said that the sample studied has high levels formal education.
+
+
+```{r}
+Table1 <-brfss2013%>%summarise(child_mean=mean(children,na.rm=TRUE),child_sd=sd(children,na.rm=TRUE),                       child_max=max(children,na.rm=TRUE),child_min=min(children,na.rm=TRUE))
+kable(Table1)
+```
+
+The following table shows us descriptive statistics on the variable of number of children, it can be seen that for the respondents the mean of children is 0.51, its standard deviation is 1.02, the minimum number of children that a respondent has is 0 and the maximum is 47 according to the sample, although it is suspected that it may be an outlier or a wrongly entered data, after the data that has 47 children, a maximum of 24 appears. 
+
+```{r}
+t3 <-table(brfss2013$marital)
+t3 <-prop.table(t3)
+c= as.data.frame(t3)
+names(c)[1]="Marital Status"
+names(c)[2]="Frequency"
+kable(c)
+```
+
+Subsequently, a table was made that indicates the marital status of the respondents, it can be observed based on the results that more than half of the sample is married (51%), followed very far by the divorced (14%), widowers (13%) and single (15%). Which indicates that there is a prevalence towards life as a couple in our sample studied. 
+
+
+```{r}
+g1 <-ggplot(data=brfss2013,aes(X_age_g))+geom_bar()+
+  xlab("Age range")+ylab("Frecuency")+
+  theme_light()+scale_x_discrete(na.translate = FALSE)+
+  ggtitle("Age of the surveyed sample")
+g1
+
+```
+
+Finally, a graph was made to analyze the age of the respondents, within the base there is a variable that groups the age in certain ranges of interest, so it was quite useful to graph the frequency of the respondents in each range. Each of the categories has a range of 10 years, with the exception of those over 65. It can be seen from the graph that the sample has an increasing trend with age, that is, most of them are adults (22%) and older adults (32%), while in a smaller proportion there are people between 18 and 24 years old (5.5%) and between 25 and 34 years old (10%). 
+
+
+
+
+**Research question 2:**
+
+To answer this question, 4 variables related to the respondents' diet were chosen, which were consumption of sugary drinks, consumption of fruits, legumes and green vegetables. Each of these questions was coded depending on the response of the respondent, who could answer their frequency of daily, weekly or monthly consumption. For the purposes of this question, the monthly consumption of the respondents was taken, mainly for a matter of comparability of the responses.
+
+In the first place, a descriptive statistics table of the selected variables was made and a joint table was generated with the mean, median, standard deviation, minimum and maximum. It can be observed from the table that within the respondents, on average They consume sugary drinks twice a month, with a median of 0 and a standard deviation of 5.55, which could be indicating a distribution skewed to the right, since the median is lower than the mean.
+
+Then we observe in the table information related to fruit consumption, where it is observed that on average the respondents consume 12 times fruit in the month, with a standard deviation of 11.3 and a median of 10, so that we could once again be in the presence of a distribution skewed to the right (mean greater than median).
+
+The following is the consumption of legumes, where said consumption is lower than that of fruits on average per month, with a value of 4.62, a standard deviation of 6 and a median of 2. Finally, the consumption of green vegetables during the month is observed. , whose average consumption is 9.39 times per month, a standard deviation of 9.44 and a median of 6. Consumption values higher than that of legumes but lower than that of fruits.
+
+```{r}
+#Select Variables
+p2 <-brfss2013%>%select(fruit1,fvbeans,fvgreen,ssbsugar)
+
+#Sugar
+d <-data.frame(p2$ssbsugar)
+d<-d%>%filter(p2.ssbsugar>300 | p2.ssbsugar==0)
+d <-d%>%mutate(fsugar=ifelse(p2.ssbsugar>0,p2.ssbsugar-300,0))
+t1_2 <-d%>%summarise(mean_=mean(fsugar),sd_=sd(fsugar),max_=max(fsugar),
+              min_=min(fsugar),median_=median(fsugar))
+t1_2 <-t1_2%>%mutate(name="Sugar")
+t1_2 <-t1_2[,c(6,1,2,3,4,5)]
+
+#Fruits
+e <-data.frame(p2$fruit1)
+e <-e%>%filter(p2.fruit1>300|p2.fruit1==0)
+e <-e%>%mutate(fruit = ifelse(p2.fruit1>0,p2.fruit1-300,0))
+t2_2 <-e%>%summarise(mean_=mean(fruit),sd_=sd(fruit),max_=max(fruit),
+              min_=min(fruit),median_=median(fruit))
+t2_2 <-t2_2%>%mutate(name="Fruit")
+t2_2 <-t2_2[,c(6,1,2,3,4,5)]
+
+#Beans
+f <-data.frame(p2$fvbeans)
+f <-f%>%filter(p2.fvbeans>300|p2.fvbeans==0)
+f <-f%>%mutate(beans = ifelse(p2.fvbeans>0,p2.fvbeans-300,0))
+t3_2 <-f%>%summarise(mean_=mean(beans),sd_=sd(beans),max_=max(beans),
+              min_=min(beans),median_=median(beans))
+t3_2 <-t3_2%>%mutate(name="Beans")
+t3_2 <-t3_2[,c(6,1,2,3,4,5)]
+
+#Vegetables
+g <-data.frame(p2$fvgreen)
+g <-g%>%filter(p2.fvgreen>300|p2.fvgreen==0)
+g <-g%>%mutate(vgreen = ifelse(p2.fvgreen>0,p2.fvgreen-300,0))
+t4_2 <-g%>%summarise(mean_=mean(vgreen),sd_=sd(vgreen),
+              max_=max(vgreen),min_=min(vgreen),median_=median(vgreen))
+t4_2 <-t4_2%>%mutate(name="vegetables")
+t4_2 <-t4_2[,c(6,1,2,3,4,5)]
+
+desc_stat <-rbind(t1_2,t2_2,t3_2,t4_2)
+kable(desc_stat,caption = "Descriptive Statistics")
+```
+
+
+
+**Research question 3:**
+
+
+The last question is related to mental health. To analyze some aspects of this health condition, a couple of graphs were generated to observe the frequency of the responses, as well as a table to analyze at the state level. 
+
+In the first place, a descriptive statistics table is presented in which the average, median, standard deviation and maximum of the days that the respondent perceives that their mental health is bad are shown. It can be seen that on average the respondents perceive that 3.37 days their mental health is bad, with a standard deviation of 7.70, which could indicate a high dispersion of the data. 
+
+```{r}
+p3 <-brfss2013%>%select(menthlth,addepev2,misnervs,misdeprd,lsatisfy,X_state)
+table3_1 <-p3%>%filter(menthlth<31)%>%
+  summarise(mean_=mean(menthlth,na.rm=TRUE),
+                          median_=median(menthlth,na.rm=TRUE),
+                          sd_=sd(menthlth,na.rm=TRUE),
+                          max_=max(menthlth,na.rm = TRUE))
+kable(table3_1,caption = "Descriptive Statistics of bad days mental health")
+```
+
+
+Below is a bar graph that shows the frequency of depressive disorders, classified by state, where it can be observed that in general a large part of the states exceeds 1000 cases of depressive disorders in the respondents, with a significant predominance of the state of Florida with about 6,500 cases. 
+
+
+```{r}
+depress <-p3%>%select(X_state,addepev2)%>%filter(addepev2=="Yes")%>%
+  group_by(X_state)%>%count(addepev2,sort = TRUE)
+
+g2<- ggplot(data = depress,aes(x=reorder(X_state,n),y=n))+geom_bar(stat = "Identity")+
+      coord_flip()+theme_minimal()+xlab("States")+ylab("Number of depressive disorder happened")
+g2
+
+```
+
+Together with the graph presented above, a table is presented with the 10 states with the highest cases of depressive disorders, where it is observed that they are the states of Florida, Kansas, Massachusetts, Nebraska, Utah, Minnesota, Michigan, Washington, Ohio and Colorado. who lead the table respectively. 
+
+```{r}
+
+
+Table3_2 <-depress%>%select(X_state,n)%>%head(10)
+names(Table3_2)[1]="State"
+kable(Table3_2, caption = "Top 10 States with depressive disorder")
+```
+
+Next, another graph is presented, which shows the frequency of nervous sensations in 30 days, although not all respondents answered this question (36,145 observations), it can be observed that there is a prevalence that there are no nervous episodes or that they are low. 
+
+Finally, a last graph related to a personal perception of life satisfaction of the respondents is presented, although this variable was also answered by few people compared to the size of the base, a prevalence towards satisfaction with their personal life is observed . 
+
+
+```{r}
+g3 <-ggplot(data=p3,aes(misnervs))+geom_bar()+scale_x_discrete(na.translate = FALSE)+
+  theme_minimal()+xlab("Categories of nervious sensations")+ylab("Frequency")
+g3
+```
+
+```{r}
+g4<- ggplot(data=p3,aes(lsatisfy))+geom_bar()+scale_x_discrete(na.translate=FALSE)+
+  theme_minimal()+xlab("Satisfaction with life")+ylab("Frequency")
+g4
+```
+
