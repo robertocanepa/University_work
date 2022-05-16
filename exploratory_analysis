@@ -1,0 +1,146 @@
+install.packages("janitor")
+library(janitor)
+library(readxl)
+library(apaTables)
+library(haven)
+library(dplyr)
+library(ggplot2)
+library(GGally)
+library(Hmisc)
+library(corrplot)
+library(PerformanceAnalytics)
+
+Enex <- read_excel("BBDD_Enex_Completa.xlsx", sheet = "como valor")
+
+#recodificacion de algunas variables
+hist (Enex$edad_calculada)
+edad2 [Enex$edad_calculada <30] <- 1 ##20-29
+edad2 [Enex$edad_calculada >=30 & Enex$edad_calculada <= 39] <- 2 ##30-39
+edad2 [Enex$edad_calculada >39 & Enex$edad_calculada <= 49 ] <- 3##40-49  
+edad2 [Enex$edad_calculada >49 & Enex$edad_calculada <= 59 ] <- 4 ## 50-59
+edad2 [Enex$edad_calculada > 60] <- 5 ##60 o mÃ¡s
+
+Enex$edad2<- as.factor(edad2)
+levels(Enex$edad2) <- c ("20 a 29", "30 a 39", "40 a 49", "50 a 59","60 o mas" )
+table (Enex$edad2)
+
+#Test de normalidad para variables del modelo
+
+#Equipos Laborales --> Hay outliers en los valores mas bajos
+mean (Enex$Equipos_Laborales, na.rm = TRUE)
+mean (Enex$Equipos_Laborales, trim = 0.10, na.rm = TRUE)
+hist(Enex$Equipos_Laborales)
+quantile (Enex$Equipos_Laborales, na.rm= TRUE)
+shapiro.test(Enex$Equipos_Laborales) ##En este caso el p es menor a cuaquiera de los valores tradicionales, por lo tanto podemos asumir normalidad
+##Idea para sacar outliers
+summary(Enex$Equipos_Laborales) ##sacamos outliers con IQR
+IQR<- 1.0000- 0.8571
+0.8571-1.5 * IQR ## 0.6427 --> CUALQUIER VALOR INFERIOR A ESTE ES OUTLIER
+
+#Espacio FÃ­sico --> Hay outliers en los valores mas bajos
+mean (Enex$Espacio_Fisico, na.rm = TRUE)
+mean (Enex$Espacio_Fisico, trim = 0.30, na.rm = TRUE)
+hist(Enex$Espacio_Fisico)
+quantile (Enex$Espacio_Fisico, na.rm= TRUE)
+shapiro.test(Enex$Espacio_Fisico) ##Se puede asumir normalidad
+
+#n personas en espacio de trabajo - Presencial y Teletrabajo
+mean (Enex$n_espacio_trabajo)
+mean (Enex$n_espacio_trabajo, trim= 0.10)
+hist(Enex$n_espacio_trabajo)
+summary (Enex$n_espacio_trabajo) ##La media es 1,44 personas, al menos el 50% de las personas comparte con una persona.El 25% no comparte el espacio. El 75% lo comparte con dos personas y hay 38 casos que comparten con 5 o mÃ¡s personas hasta el mazimo qye es 18
+
+#exclusividad_e_trabajo--> Exclusividad del espacio de trabajo
+table(Enex$exclusividad_e_trabajo)##43 personas no cuentan con un lugar exclusivo para teletrabajar
+
+##Soledad en el teletrabajo
+
+mean (Enex$soledad_teletrabajo, na.rm=TRUE)
+mean (Enex$soledad_teletrabajo, na.rm=TRUE, trim= 0.10)
+hist(Enex$soledad_teletrabajo, breaks= 3)
+
+#composicion del hogar
+table(Enex$h_household) ## 55 personas viven solas
+table(Enex$h_pareja) ##430 vive con pareja
+table(Enex$h_hijo) ##355 con hijos
+table(Enex$h_am) ##86 viven con AM
+table(Enex$h_otrof) ##145 viven con otro familiar
+table (Enex$h_otros) ##53 vive con otros
+table (Enex$h_pet) ##349 tiene mascota
+tabyl(Enex$h_pet)
+##Test de normalidad--> Adaptabilidad "adaptarse a cambios dioficiles"
+mean (Enex$adaptar_cambios) #4.31
+mean (Enex$adaptar_cambios, trim = 0.10)#4.4
+hist (Enex$adaptar_cambios, breaks=4)
+shapiro.test(Enex$adaptar_cambios) ##Se puede asumir normalidad
+
+
+##Herramientas de gestion
+mean (Enex$H_Gestion) #0.66
+mean (Enex$H_Gestion, trim = 0.10) ##0.68
+hist (Enex$H_Gestion, breaks = 6)
+shapiro.test(Enex$H_Gestion) ##Se asume normalidad
+
+
+##Herramientas tecnologicas --> esta estÃ¡ interesante
+mean (Enex$H_tecnologicas) ##0.75
+mean (Enex$H_tecnologicas, trim = 0.10) ##0.75
+hist (Enex$H_tecnologicas)
+shapiro.test(Enex$H_tecnologicas) ##Se asume normalidad
+
+##Calidad de vida en el hogar --> todo muy concentrado al 100%
+mean (Enex$cvida_hogar, na.rm = TRUE) #0.91
+mean (Enex$cvida_hogar,na.rm= TRUE, trim = 0.10) ##0.94
+hist (Enex$cvida_hogar)
+shapiro.test(Enex$cvida_hogar) ##Se asume normalidad
+
+##Chequeo de valores
+
+table(Enex$nejercicio) ## mas de 7 me parecen outliers
+table(Enex$nsueno) ## Mas de 7 me parece outlier
+table(Enex$ndespertar) ##Las personas que contestaron 8 y 10 creo que son outliers
+table(Enex$ndlibre)
+table(Enex$npinteractuar) ##me da la impresion de que mas de 30 es raro,  claramente las que pusieron mas de 1000 esta mal
+
+##Productividad// creo que hasta abira es la mas interesante de mirar
+mean (Enex$Productividad, na.rm = TRUE) #0,70
+mean (Enex$Productividad, trim = 0.10, na.rm = TRUE) #0,70
+hist(Enex$Productividad)
+quantile (Enex$Productividad, na.rm= TRUE)
+shapiro.test(Enex$Productividad)
+
+##Percepcion Teletrabajo // tambien interesante
+mean (Enex$PercepcionTT, na.rm = TRUE) #0.72
+mean (Enex$PercepcionTT, trim = 0.10, na.rm = TRUE) #0.73
+hist(Enex$PercepcionTT)
+quantile (Enex$PercepcionTT, na.rm= TRUE)
+shapiro.test(Enex$PercepcionTT) #se asume normalidad
+
+##Percepcio presencialodad
+
+mean (Enex$Presencialidad_percepcion, na.rm = TRUE) #0.50
+mean (Enex$Presencialidad_percepcion, trim = 0.10, na.rm = TRUE) #0.50
+hist(Enex$Presencialidad_percepcion)
+quantile (Enex$Presencialidad_percepcion, na.rm= TRUE)
+shapiro.test(Enex$Presencialidad_percepcion) #se asume normalidad
+
+##creamos bb.dd solo con variables numericas
+Enex2<- select(Enex, antiguedad_calculada = antiguedad_calculada,neducacional=neducacional,
+               Equipos_Laborales=Equipos_Laborales,Espacio_Fisico=Espacio_Fisico,n_espacio_trabajo=n_espacio_trabajo,
+               soledad_teletrabajo=soledad_teletrabajo, h_mt2=h_mt2, adaptar_cambios=adaptar_cambios,
+               H_Gestion=H_Gestion,H_tecnologicas=H_tecnologicas, cvida_hogar=cvida_hogar,estres=estres,nejercicio=nejercicio, nsueno=nsueno,ndespertar=ndespertar,
+               rhtrabajo_presencial=rhtrabajo_presencial, rhtrabajo_teletrabajo = rhtrabajo_teletrabajo, capacitaciones=capacitaciones,
+               npinteractuar=npinteractuar, porcentaje_logro=porcentaje_logro, equipodirecto=equipodirecto,
+               reujefatura=reujefatura, recjefatura=recjefatura, satisfacciont_presencial= satisfacciont_presencial, satisfacciont_teletrabajo = satisfacciont_teletrabajo,
+               porcentaje_tareas_presencial=  porcentaje_tareas_presencial, porcentaje_tareas_teletrabajo= porcentaje_tareas_teletrabajo, modalidad=modalidad, 
+               mpersonal=mpersonal, menex=menex, cumplimientoenex=cumplimientoenex,cserviciostl=cserviciostl, cserviciosp=cserviciosp,
+               cprepandemia=cprepandemia, innovaprepandemia=innovaprepandemia,Productividad=Productividad, PercepcionTT=PercepcionTT,
+               Presencialidad_percepcion=Presencialidad_percepcion)
+
+cor(Enex2)
+correlaciones <-cor (Enex2)
+write.csv(correlaciones, file = "Correlaciones_1.csv")
+
+mean(Enex2$antiguedad_calculada)
+
+tabyl (Enex$adaptar_cambios)
