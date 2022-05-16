@@ -1,0 +1,120 @@
+---
+title: "Tarea 2"
+author: "Roberto C�f¡nepa, Felipe Parra e Ignacio Vargas"
+date: "14 de septiembre de 2018"
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r load myData, include=FALSE}
+load("Tarea 2.RData")
+library(knitr)
+library(quantmod)
+library(ggplot2)
+```
+
+## Introducción
+
+El siguiente informe, al igual que el anterior, se basar� principalmente en la exposición de los dataframes solicitados y respuestas breves en caso de ser necesarias.
+
+## Pregunta 1
+
+En esta pregunta se solicita la elección de dos variables de los indicadores de desarrollo del banco mundial. Para efectos de este trabajo elegimos las variables Matrícula en Educación Primaria y Expectativas de Vida, ya que consideramos que no sólo muestran el estado de desarrollo actual, sino que también entregan una visión a futuro del desarrollo humano de los países. Es decir, son índices de primera importancia para casi todas las áreas de investigación de la economía.
+
+En primer lugar, se solicita crear un data frame donde se muestre estadística descriptiva para los años 1990 y 2015, el cual se presenta acontinuación:
+
+```{r echo=FALSE, results='asis'}
+kable(P1, caption = "Estadística descriptiva")
+```
+
+Posteriormente, se solicita crear diagramas de caja que permitan comparar ambas variables en los dos años.
+
+Para la Matrícula en Educación Primaria el diagrama quedaría de esta forma:
+
+```{r echo=FALSE, results='asis'}
+boxplot(SE.PRM.NENR~year,data=aux4, main="Matrícula Educación Primaria", xlab="año", ylab="Matrícula de educación Primaria")
+```
+
+
+Para Expectativa de vida el diagrama es el siguiente:
+
+```{r echo=FALSE, results='asis'}
+boxplot(SP.DYN.LE00.IN~year,data=aux4, main="Expectativa de Vida", xlab="año", ylab="Expectativa de vida")
+```
+
+## Pregunta 2
+
+Para esta pregunta es necesario obtener el precio de los índices accionarios de Alemania y Reino Unido.
+
+El primer requerimiento es generar una gráfico de densidad de la rentabilidad de los índices:
+
+Para el caso alemán:
+
+```{r echo=FALSE, results='asis'}
+plot(dd, main="Densidad de Rentabilidad DAX")
+```
+
+Para el caso del Reino Unido:
+
+```{r echo=FALSE, results='asis'}
+plot(df, main="Densidad de Rentabilidad FTSE")
+```
+
+Además, dentro del mismo apartado se solicita crear gráficos Q-Q de los retornos de cada índice.
+
+DAX:
+
+```{r echo=FALSE, results='asis'}
+plot(qqdax, main="Gráficos Q-Q DAX")
+```
+
+FTSE:
+
+```{r echo=FALSE, results='asis'}
+plot(qqftse, main="Gráficos Q-Q FTSE")
+```
+
+Ambos se comportan de manera muy similar al compararlos con la distribución normal, mientras en general pasa casi sobre la linea indicando una distribución normal, en los extremos las distribución de los retornos se aleja de la diagonal. 
+
+Para efectos del análisis técnico se realizan gráficos de vela y las bandas de bollinger
+
+A continuación se presentan los gráficos de vela:
+
+DAX
+
+```{r echo=FALSE, results='asis'}
+plot(csdax, main="Gráficos de vela DAX")
+```
+
+FTSE
+
+```{r echo=FALSE, results='asis'}
+plot(csftse, main="Gráficos de vela FTSE")
+```
+
+El tamaño de las velas representa que tan intensa es la compra o venta y por ende el movimiento del precio mientras su color si el precio de cierre está sobre el precio de apertura o bajo este, ambas poseen una baja considerable en el periodo cercano a 2016 y se estabiliza desde 2016 hacia adelante. 
+
+Ahora, se mostrarán las bandas de Bollinger:
+
+DAX
+
+```{r echo=FALSE, results='asis'}
+plot(bbdax, main="Bandas de Bollinger DAX")
+```
+
+FTSE
+
+```{r echo=FALSE, results='asis'}
+plot(bbftse, main="Bandas de Bollinger FTSE")
+```
+
+Las bandas son más anchas cuando la volatilidad es mayor y más estrechas cuando esta es menor, para DAX se observa una volatilidad alta antes de 2017 y una menor hacia adelante mientras para FTSE la volatilidad es mas pareja en todo el periodo excepto cerca del final de este desde finales de 2017.
+
+Por último se nos solicita analizar el índice VIX como se aprecia a continuación:
+
+```{r echo=FALSE, results='asis'}
+plot(vixiplot, main="Índice VIX")
+```
+
+Las recesiones corresponden a 1990/08-1991/03 , 2001/04-2001/11 , 2008/01-2009/06. Es posible observar que el índice se eleva durante estos periodos indicando una alta volatilidad, indicándonos que en el mercado hay miedo y pesimismo, es en estos momentos donde se producen fuertes movimientos en los mercados bursátiles. Existen periodos donde el índice esta alto pero no coinciden con periodos de recesión por lo que el indice no es útil por si solo para identificar un periodo de recesión.
