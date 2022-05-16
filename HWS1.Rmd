@@ -1,0 +1,303 @@
+---
+title: "Pauta Tarea 1"
+author:  <a href="https://gcabrerag.rbind.io/"> <h3> Gabriel Cabrera </h3> </a> \newline Facultad de Economía y Negocios, Universidad de Chile, Chile
+date: "2018-10-15 (updated: `r Sys.Date()`)"
+linkcolor: "red"  
+output: 
+  html_document:
+    highlight: "kate"
+    toc: true
+    css: styles.css
+    code_download: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    code_folding: "show"
+    include:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, warning = FALSE, message = FALSE)
+```
+
+---
+
+<center> <b> Instrucciones </b> </center>
+<p>
+
+1.	Esta tarea debe ser entregada en grupos de máximo 3 alumnos. 
+2.	Se debe enviar una carpeta comprimida la que debe contener: un archivo .Rproj (proyecto en R), un script y un breve informe con sus resultados, incluyendo tablas, gráficos, etc., según corresponda.  El formato del infome puede ser word o pdf.
+3.  El asunto del email con su tarea debe ser "Tarea 1-Finanzas 1-Apellido 1-Apellido 2-Apellido 3"
+4.	La fecha de entrega es el Jueves 30 de Agosto del 2018 hasta las 23:59 hrs al correo del curso: [r2018uchile@gmail.com](r2018uchile@gmail.com). 
+
+---
+
+<div class="quote-container">
+
+> “Data is a precious thing and will last longer than the systems themselves.” 
+>
+> <p align="right"> -- *Tim Berners-Lee*, inventor del the World Wide Web </p>
+
+</div>
+
+<br>
+
+# Pregunta 1 {.tabset - .tabset-fade}
+
+Una importante consultora de marketing está en la búsqueda de estudiantes con conocimiento del lenguaje R para realizar un estudio respecto a la industria del cine. Usted piensa que es una muy buena oportunidad postular, considerando que está cursando un curso en el que está aprendiendo R. Después de haber pasado varias pruebas y entrevistas, usted es contratado y como primera tarea le entregan la carpeta *Datasets* que contiene:
+
+
+| Base de datos              | Descripción                                 |
+|----------------------------|---------------------------------------------|
+| *genres.csv*               | Géneros de cada película.                   |
+| *keywords.csv*             | Palabras claves de cada película.           |
+| *production_companies.csv* | Compañía a cargo de la producción.          |
+| *production_countries.csv* | Países donde se realizá la producción.      |
+| *movie_dataset.csv*        | Base de datos principal.                    |
+
+Table: Breve descripción de las bases de datos.
+
+A continuación le piden los siguientes **data frames** (sin considerar los *missing values*) pensando que en un futuro no tan distante la información que contendrán será presentada gráficamente:
+
+<br>
+
+## Pregunta 1.1 {-}
+
+Identificar las 10 palabras claves (*keywords*) que más se repiten. (*10 puntos*) 
+
+```{r chunk1, eval = TRUE, echo = TRUE}
+# cargamos libreria 
+if(!require("pacman")) install.packages("pacman")
+p_load("tidyverse","readxl","lubridate")
+```
+
+```{r chunk2, eval = TRUE, echo = TRUE}
+# cargamos la data 
+keywords <- read.csv("Datasets/keywords.csv")
+```
+
+```{r chunk3, eval = TRUE, echo = TRUE}
+# construimos el data frame de las palabras claves 
+data_keywords <- keywords %>% 
+                 na.omit() %>% 
+                 group_by(keywords) %>% 
+                 count() %>% 
+                 arrange(n) %>% 
+                 tail(10)
+```
+
+```{r, echo = FALSE}
+knitr::kable(data_keywords %>% rename(Keywords = keywords, Cantidad = n), caption = "Las 10 *keywords*")
+```
+
+
+## Pregunta 1.2 {-}
+
+Identificar:
+
+a. Las 10 películas con las ingresos (*revenue*) más altos. (*10 puntos*)
+        
+    ```{r chunk4, eval = TRUE, echo = TRUE}
+    # cargamos la data 
+    movie_dataset <- read.csv("Datasets/movie_dataset.csv")
+    ```
+    
+    ```{r chunk5, eval = TRUE, echo = TRUE}
+    # construimos el data frame de revenue, 10 mayores 
+    data_revenue_max <- left_join(movie_dataset, keywords, by = "id") %>%      
+                        na.omit() %>% 
+                        group_by(title, revenue, id) %>% 
+                        count() %>% 
+                        arrange(desc(revenue)) %>% 
+                        head(10) %>% 
+                        select(title, revenue, id)
+    ```
+    
+    ```{r, echo = FALSE}
+    knitr::kable(data_revenue_max %>% rename(Titulo = title, Revenue = revenue, Id = id), caption = "Las 10 películas con más *revenue*")
+    ```
+    
+b. Las 10 películas con las ingresos (*revenue*) más bajos. (*10 puntos*) 
+    
+    ```{r, eval = TRUE, echo = TRUE}
+    # construimos el data frame de revenue, 10 menores
+    data_revenue_min <- left_join(movie_dataset, keywords, by = "id") %>%      
+                        na.omit() %>% 
+                        group_by(title, revenue, id) %>% 
+                        count() %>% 
+                        arrange(desc(revenue)) %>%
+                        filter(revenue != 0) %>% 
+                        tail(10) %>% 
+                        select(title, revenue, id)
+    ```
+    
+    ```{r, echo = FALSE}
+    knitr::kable(data_revenue_min %>% rename(Titulo = title, Revenue = revenue, Id = id), caption = "Las     10 películas con menos *revenue*")
+    ```
+    
+c. El número de películas con ingresos igual a cero. (*10 puntos*)
+    
+    ```{r, eval = TRUE, echo = TRUE}
+    # construimos el data frame de revenue igual a cero 
+    data_revenue_cero <- movie_dataset %>%     
+                         na.omit() %>%
+                         filter(revenue == 0) %>% 
+                         group_by(revenue) %>% 
+                         count() 
+    ```
+    
+    ```{r, echo = FALSE}
+    knitr::kable(data_revenue_cero %>% rename(Revenue = revenue, Cantidad = n), caption = "Total de          películas con cero *revenue*")
+    ```
+    
+
+## Pregunta 1.3 {-}
+
+Identificar la cantidad de películas por país, luego calcular la utilidad^[Asuma que el presupuesto fue el gasto total.] (*revenue* - *budget*) y encontrar las 5 paises con mayor y menor utilidad promedio. (*10 puntos*)
+
+```{r, eval = TRUE, echo = TRUE}
+# cargamos la data 
+production_countries <- read.csv("Datasets/production_countries.csv")
+```
+
+```{r, eval = TRUE, echo = TRUE}
+# construimos el data frame con cantidad de peliculas por país
+movie_country <- right_join(movie_dataset, production_countries, by = "id") %>% 
+                 na.omit() %>% 
+                 group_by(production_countries) %>% 
+                 count() %>% 
+                 arrange(n)
+```
+
+```{r, echo = FALSE}
+knitr::kable(head(movie_country,5) %>% rename(Pais = production_countries, Cantidad = n), caption = "Solo los 5 primeros")
+```
+
+
+```{r, eval = TRUE, echo = TRUE}
+# construimos el data frame con cinco países con menor margen
+data_headmargen <- right_join(movie_dataset, production_countries, by = "id") %>% 
+                   na.omit() %>%
+                   mutate(margen = revenue - budget) %>% 
+                   group_by(production_countries) %>% 
+                   summarise(mean(margen)) %>% 
+                   rename(mean_margen = `mean(margen)`) %>% 
+                   arrange(mean_margen) %>% 
+                   head(5)
+```
+
+```{r, echo = FALSE}
+knitr::kable(data_headmargen %>% rename(Pais = production_countries, `Margen Promedio` = mean_margen), caption = "Los 5 países con menor utilidad promedio")
+```
+
+
+
+```{r, eval = TRUE, echo = TRUE}
+# construimos el data frame con cinco países con mayor margen
+data_tailmargen <- right_join(movie_dataset, production_countries, by = "id") %>% 
+                   na.omit() %>% 
+                   mutate(margen = revenue - budget) %>% 
+                   group_by(production_countries) %>% 
+                   summarise(mean(margen)) %>% 
+                   rename(mean_margen = `mean(margen)`) %>% 
+                   arrange(mean_margen) %>% 
+                   tail(5)
+```
+
+
+```{r, echo = FALSE}
+knitr::kable(data_tailmargen %>% rename(Pais = production_countries, `Margen Promedio` = mean_margen),
+caption = "Los 5 países con mayor utilidad promedio")
+```
+
+
+## Pregunta 1.4 {-}
+
+Dado que últimamente las salas IMAX han tenido una muy buena recepción por parte del público, la consultora le pide calcular el ingreso (*revenue*) promedio por género, pero sólo de aquellas películas que fueron estrenadas en formato IMAX. (*15 puntos*)
+
+```{r, eval = TRUE, echo = TRUE}
+# cargamos la data 
+genero <- read.csv("Datasets/genres.csv")
+```
+
+```{r, eval = TRUE, echo = TRUE}
+imax_movies <- genero %>% 
+               right_join(movie_dataset, by = "id") %>% 
+               right_join(keywords, by = "id") %>% 
+               na.omit() %>% 
+               filter(keywords == "imax") %>% 
+               group_by(genres, keywords) %>% 
+               summarise(mean(revenue)) %>%
+               rename(revenue_mean = `mean(revenue)`) %>% 
+               arrange(revenue_mean)
+```
+
+```{r, echo = FALSE}
+knitr::kable(imax_movies %>% rename(Genero = genres, `Revenue Promedio` = revenue_mean) %>% select(Genero,`Revenue Promedio`), caption = "Ingreso (*revenue*) promedio por género")
+```
+
+## Pregunta 1.5 {-}
+
+La industria del cine ha cambiado mucho desde sus inicios y miles de películas son estrenadas cada año. Considerando sólo las películas que se encuentran en las bases de datos, identifique el porcentaje de películas estrenadas por década^[Una librería útil para trabajar con fechas es `lubridate`. La década se puede construir con la ayuda del operador `%%`.]. (*15 puntos*) 
+
+```{r, eval = TRUE, echo = TRUE}
+# porcentaje de peliculas por decada 
+decade_movies <- movie_dataset %>% 
+                 na.omit() %>% 
+                 mutate(year = year(release_date), decade = year - year%%10, n = n()) %>% 
+                 group_by(decade, n) %>% 
+                 summarise(n()) %>% 
+                 mutate(percentage = `n()`/n)
+```
+
+```{r, echo = FALSE}
+knitr:: kable(decade_movies %>% rename(Decada = decade, Porcentaje = percentage) %>% select(Decada, Porcentaje), caption = "Porcentaje de películas estrenadas por década")
+```
+
+## Pregunta 1.6 {-}
+
+Identifique la cantidad de películas por estado de Estados Unidos (vea el archivo *estados.csv*) y el presupuesto promedio (*budget*) por estado. ¿Qué estados nunca fueron usados como lugar de filmación?, ¿Existe algún estado con presupuesto cero?. (*15 puntos*)
+
+```{r, eval = TRUE, echo = TRUE, warning=FALSE}
+# cargamos la lista y la transformas a character
+lista_estados <- read.csv("Datasets/estados.csv") %>% 
+                 as.matrix() %>% 
+                 as.character()
+```
+
+```{r, eval = TRUE, echo = TRUE}
+# Promedio de presupuesto por estado de Estados Unidos
+peliculas_estado <- keywords %>%                                 
+                    filter(keywords %in% lista_estados) %>%
+                    right_join(movie_dataset, by = "id") %>% 
+                    group_by(keywords) %>%                   
+                    summarise(count=n(), mean(budget)) %>%                
+                    mutate(nombre_estado=keywords) %>%       
+                    right_join(                             
+                      tibble(nombre_estado=lista_estados),  
+                      by="nombre_estado"                    
+                    ) %>%                                 
+                    select(nombre_estado, count, `mean(budget)`) %>%        
+                    mutate(
+                      count=ifelse(is.na(count),0,count)    
+                    ) %>%
+                    rename("presupuesto" = `mean(budget)`) %>% 
+                    arrange(desc(count))   
+```
+
+
+```{r, echo = FALSE}
+knitr::kable(peliculas_estado %>% select(nombre_estado, count) %>% filter(count != 0) %>% rename(Estado = nombre_estado, Cantidad = count), caption = "Total de películas por estado")
+```
+
+```{r, echo = FALSE}
+knitr::kable(peliculas_estado %>% filter(presupuesto == 0) %>% select(nombre_estado, presupuesto) %>% rename(Estado = nombre_estado, Presupuesto = presupuesto), caption = "Estado con presupuesto igual a cero")
+```
+
+```{r, echo = FALSE}
+knitr::kable(peliculas_estado %>% filter(count == 0) %>% select(nombre_estado) %>%  rename(Estado = nombre_estado), caption = "Estados que no fueron usados para filmar")
+```
+

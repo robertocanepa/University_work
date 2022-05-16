@@ -1,0 +1,111 @@
+---
+output:
+  html_document:
+    df_print: paged
+  html_notebook: default
+  pdf_document: default
+---
+
+\begin{center}
+			\includegraphics[width=1cm]{logo.jpg}\\
+			\LARGE{\textbf{Tópicos en Economía y Negocios Utilizando R}}\\
+			\textbf{Guía de Ejercicios 14}\\
+			\vspace{0.5cm}
+\end{center}
+
+\begin{flushright}
+  \textbf{Profesor}: \textit{Víctor Macías E.}  
+  \\
+  \textbf{Ayudante}: \textit{Gabriel Cabrera G.}  
+\end{flushright}
+
+\vspace{1cm}
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(fig.width=8, fig.height=4, echo = TRUE)
+```
+
+En este Guía usaremos el paquete [*shiny*](http://shiny.rstudio.com/), el cual permite la creación de web apps iteractivas. 
+
+# Estructura de un app
+
+La estructura básica es la siguiente: 
+
+library(shiny)
+
+ui <- fluidPage( )
+
+server <- function(input, output) { }
+
+shinyApp(ui = ui, server = server)
+
+# ¿Cómo compartir el app en la web?
+
+1. Guardar todos los archivos relacionados al app en un mismo directorio
+2. El script del app guardarlo como app.r
+3. Usar [*shinyapps.io*](https://www.shinyapps.io/) para compartir el app en la web. Para una descripción de cómo crear una cuenta y desplegar la app en la web, ver el siguiente link: <https://shiny.rstudio.com/articles/shinyapps.html>
+
+#Pregunta
+
+Construya una web app que permita al usuario interactuar con la distribución normal y la distribución chi-cuadrado. 
+
+```{r loading-libs, message=FALSE}
+library(shiny)
+library(shinythemes)
+library(ggplot2)
+```
+
+```{r}
+ui <- navbarPage(
+  theme = shinytheme("united"),
+  "Distribución de variable aleatoria",
+  tabPanel(
+    "Distribución normal", 
+    column(3,
+           sliderInput(inputId = "mu", "Media Aritmética:", value = 0, min = -5, max = 5),
+           numericInput(inputId = "sd", "Desviación Estándar:", value = 1, min = 1, max = 10),
+           numericInput(inputId = "li1", "Límite inferior eje x:", value = -4),
+           numericInput(inputId = "ls1", "Límite superior eje x:", value = 4)
+    ),
+    column(9, 
+           plotOutput(outputId = "DN")
+    )
+  ),      
+  tabPanel(
+    "Distribución chi-cuadrada", 
+    column(3,
+           sliderInput(inputId = "gl", "Número de grados de libertad:", value = 7, min = 1, max = 50),
+           numericInput(inputId = "li2", "Límite inferior eje x:", value = 0),
+           numericInput(inputId = "ls2", "Límite superior eje x:", value = 30)
+    ),
+    column(9, 
+           plotOutput(outputId = "CHI2")
+    )
+  ))
+
+
+server <- function(input, output) {
+  tabPanel("Distribución normal",
+           output$DN <- renderPlot({
+             ggplot(data.frame(x = c(input$li1, input$ls1)), aes(x)) + 
+               stat_function(fun = dnorm, size=1, args = list(mean = input$mu, sd = input$sd)) +
+               ggtitle("Distribución normal") +
+               theme_bw()
+           }))
+  tabPanel("Distribución chi-cuadrada",
+           output$CHI2 <- renderPlot({
+             ggplot(data.frame(x = c(input$li2, input$ls2)), aes(x)) + 
+               stat_function(fun = dchisq, size=1, args = list(df = input$gl)) +
+               ggtitle("Distribución chi-cuadrada") +
+               theme_bw()
+           }))
+}
+
+shinyApp(ui = ui, server= server)
+
+```
+
+
+
+ 
+

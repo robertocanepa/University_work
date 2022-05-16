@@ -1,0 +1,68 @@
+---
+title: "Ayudantia 1"
+author: "Roberto Canepa"
+date: "6 de agosto de 2018"
+output:
+  html_document:
+    df_print: paged
+  pdf_document: default
+---
+
+#Primera Ayudantia de R Markdown
+## Si quiero una subseccion, utilizo dos signos "gato"
+**si quiero algo con negrita**
+*o si quiero la letra cursiva*
+
+Para los subindices se puede escirbir asi $x_1$, mientras que para los subindices es necesario hacer $x^2$
+ 
+ 
+Si quiero agregar un link, se compila asi:
+[texto de link ](link)
+
+Para agregar una imagen, 
+
+
+
+$$
+\Theta = \begin{pmatrix}\alpha & \beta\\
+\gamma & \delta
+\end{pmatrix}
+$$
+
+$$
+\begin{vmatrix}a & b\\
+c & d
+\end{vmatrix}=ad-bc
+$$
+
+
+Esta parte se hace con ctrl + alt+i
+
+```{r,prueba1,results='hide',fig.cap="El primer graficus",fig.height=4}
+# Chunk 1 
+plot(cars, pch = 18)
+```
+
+```{r,setup,include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+```
+Realizando los chunks jajaj
+
+```{r,}
+#chunk 1
+plot(cars,pch=18)
+```
+
+```{r}
+# Chunk 2 
+knitr::include_graphics("hex-rmarkdown.png")
+```
+
+```{r}
+# Chunk 3 
+knitr::kable(iris[1:5, ], caption = 'A caption')
+```
+  
+
+Revisar ayudantia para hacerla nuevamente 

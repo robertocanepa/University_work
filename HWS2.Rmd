@@ -1,0 +1,320 @@
+---
+title: "Pauta Tarea 2"
+author:  <a href="https://gcabrerag.rbind.io/"> <h3> Gabriel Cabrera </h3> </a> \newline Facultad de Economía y Negocios, Universidad de Chile, Chile
+date: "2018-10-15 (updated: `r Sys.Date()`)"
+linkcolor: "red"  
+output: 
+  html_document:
+    highlight: "kate"
+    toc: true
+    css: styles.css
+    code_download: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    code_folding: "show"
+    include:
+      after_body: footer.html
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, warning = FALSE, message = FALSE)
+```
+
+---
+
+<center> <b> Instrucciones </b> </center>
+<p>
+
+1.	Esta tarea debe ser entregada en grupos de máximo 3 personas. 
+2.	Se debe enviar una carpeta comprimida que contenga: un archivo .Rproj (proyecto en R), un script y un breve informe en R Markdown con sus resultados, incluyendo tablas, gráficos, etc., según corresponda.  El formato del infome puede ser word o pdf.
+3.  El asunto del email con su tarea debe ser "Tarea 2-R Apellido 1 -Apellido 2 -Apellido 3"
+4.	La fecha de entrega es el Viernes 14 de Septiembre del 2018 hasta las 23:59 hrs al correo del curso: [r2018uchile@gmail.com](r2018uchile@gmail.com). 
+
+---
+
+<div class="quote-container">
+
+> “PowerPoint is like being trapped in the style of early Egyptian flatland cartoons rather than using the more effective tools of Renaissance visual representation.” 
+>
+> <p align="right"> *Edward R. Tufte*, Beautiful Evidence </p>
+
+</div>
+
+<br>
+
+# Pregunta 1 {.tabset - .tabset-fade}
+
+## Pregunta 1.1 {-}
+
+Seleccione dos variables de su interés del *World Development Indicators* para el año 1990 y 2015. Incluya todos los países presentes en la base de datos, excluyendo los agregados regionales. Explique brevemente por qué son relevantes, argumentando a partir de conocimientos de cursos previos y/o trabajos empíricos.
+
+```{r, warning=FALSE, message=FALSE}
+if(!require("pacman")) install.packages("pacman")
+p_load("tidyverse", "tidyquant", "WDI", "fBasics", "gridExtra", "grid", "scales", 
+       "plyr", "extrafont", "zoo")
+```
+
+
+```{r}
+#"NY.GDP.PCAP.PP.CD" -> PIB PPP
+#"BN.CAB.XOKA.GD.ZS" -> balance cuenta corriente como porcentaje del pib
+
+wdi_data <- as.tibble(
+            WDI(indicator = c("NY.GDP.PCAP.PP.CD", "BN.CAB.XOKA.GD.ZS"), 
+                country = "all", 
+                extra = TRUE, 
+                start = 1990, 
+                end = 2015)
+            )
+```
+
+```{r}
+#"NY.GDP.PCAP.PP.CD" -> PIB PPP
+#"BN.CAB.XOKA.GD.ZS" -> balance cuenta corriente como porcentaje del pib
+
+wdi_data <- wdi_data %>% 
+            select(country:region) %>%
+            dplyr::rename(pib = NY.GDP.PCAP.PP.CD, cuenta_corriente = BN.CAB.XOKA.GD.ZS) %>% 
+            dplyr::filter( year %in% c("1990", "2015") & region != "Aggregates") %>% 
+            na.omit() %>% 
+            group_by(country, year) %>% 
+            arrange(year)
+
+```
+
+## Pregunta 1.2 {-}
+
+Construya un *data frame* y presente los valores máximos, mínimos, media aritmética, mediana y desviación estándar que permita comparar los valores de cada variable en los años 1990 y 2015.
+
+```{r, include=TRUE, results = "asis"}
+year_loop <- c(1990, 2015)
+
+list_countries <- list()
+
+for(i in 1:length(year_loop)){
+  
+  list_countries[[i]] <- wdi_data %>% 
+                         dplyr::filter(year == year_loop[i])
+  
+     print(knitr::kable(cbind(basicStats(as.matrix(list_countries[[i]][3])),
+                        basicStats(as.matrix(list_countries[[i]][4]))), 
+                        digits = c(1,5)))      
+}
+```
+
+## Pregunta 1.3 {-}
+
+Grafique un boxplot para cada una de las variables que permita la comparación de 1990 y 2015. Interprete.
+
+```{r}
+# Grafico para el producto interno bruto 1990 y 2015
+ggplot_one <- list_countries[[1]] %>%  
+              ggplot(mapping = aes(x = year, y = pib, fill=year, group = year)) + 
+              geom_boxplot(show.legend = FALSE) +
+              scale_y_continuous(breaks = pretty_breaks(), 
+                                 limits = c(min(list_countries[[1]]$pib,
+                                                list_countries[[2]]$pib),
+                                            max(list_countries[[1]]$pib,
+                                                list_countries[[2]]$pib))) + 
+              ylab("PIB (millones de dòlares)") + xlab("1990") + 
+              theme_bw() + scale_x_discrete(breaks = NULL)
+
+ggplot_two <- list_countries[[2]] %>%  
+              ggplot(mapping = aes(x = year, y = pib, fill=year)) + 
+              geom_boxplot(show.legend = FALSE) +
+              scale_y_continuous(breaks = pretty_breaks(), 
+                                 limits = c(min(list_countries[[1]]$pib,
+                                                list_countries[[2]]$pib),
+                                            max(list_countries[[1]]$pib,
+                                                list_countries[[2]]$pib))) +
+              ylab("PIB (millones de dòlares)") + xlab("2015") +
+              theme_bw() + scale_x_discrete(breaks = NULL)
+
+grid.arrange(ggplotGrob(ggplot_one), ggplotGrob(ggplot_two), ncol = 2, 
+             top = "Producto Interno Bruto")
+
+```
+
+
+```{r}
+ggplot_one <- list_countries[[1]] %>%  
+              ggplot(mapping = aes(x = year, y = cuenta_corriente, fill=year, 
+                                   group = year)) + 
+              geom_boxplot(show.legend = FALSE) +
+              scale_y_continuous(breaks = pretty_breaks(), limits = c(-55, 50)) + 
+              ylab("PIB (millones de dòlares)") + xlab("1990") + theme_bw() + 
+              scale_x_discrete(breaks = NULL)
+
+ggplot_two <- list_countries[[2]] %>%  
+              ggplot(mapping = aes(x = year, y = cuenta_corriente, fill=year)) + 
+              geom_boxplot(show.legend = FALSE) +
+              scale_y_continuous(breaks = pretty_breaks(), limits = c(-55, 50)) + 
+              ylab("PIB (millones de dòlares)") + xlab("2015") + theme_bw() + 
+              scale_x_discrete(breaks = NULL)
+
+grid.arrange(ggplotGrob(ggplot_one), ggplotGrob(ggplot_two), ncol = 2, 
+             top = "balance cuenta corriente como porcentaje del pib")
+```
+
+
+# Pregunta 2 {.tabset - .tabset-fade}
+
+## Pregunta 2.1 {-}
+
+Desde *Yahoo Finance* obtenga los precios mensuales de los indices accionarios de los siguientes
+países desde Enero del 2005 hasta Diciembre del 2017: (a) S&P 500 Estados Unidos (^GSPC), (b) CAC 40 Francia (^FCHI), (c) DAX Alemania (^GDAXI) y FTSE 100 Reino Unido (^FTSE).
+
+a. Genere un gráfico de densidad para el retorno^[La fórmula para calcular (log) retornos es: $r_t = log(1 + R_t) = log(\frac{P_t}{P_{t-1}}) = p_t - p_{t-1}$] de cada índice accionario.
+    
+    ```{r}
+    tickers <- c("^GDAXI", "^FTSE")
+    ```
+        
+    ```{r}
+    data_activos <- tq_get(tickers,
+                    get = "stock.prices",
+                    from = "2005-01-01",
+                    to  = "2018-01-01",
+                    periodicity = "monthly")
+    ```
+    
+    ```{r}
+    retornos_activos <- data_activos %>%
+                        group_by(symbol) %>%
+                        tq_transmute(select = close,
+                          mutate_fun = periodReturn,
+                          period = "daily",
+                          type = "log",
+                          col_rename = "retornos.diarios")
+    ```
+            
+    ```{r, fig.width = 4.5, fig.height = 2.95, fig.align = "center"}
+    retornos_activos %>%
+             ggplot(mapping = aes(x = retornos.diarios, fill = symbol))+
+             geom_density(alpha = 0.5) +
+                 labs(title = "Retornos Activos",
+                      subtitle = "DAX Alemania & FTSE 100 Reino Unido",
+                      x = "Retornos mensuales", y = "Densidad") +
+             theme_tq() +
+             scale_fill_tq() +
+             facet_wrap(~ symbol, ncol = 2) +
+             guides(fill=guide_legend(title="Activos:"))
+    ```
+    
+    
+b. Use un *Q-Q plot* para comparar la distribución de los retornos de cada índice accionario con la        distribución normal. Comente.
+        
+    ```{r, fig.width = 4.5, fig.height = 2.95, fig.align = "center"}
+    retornos_activos %>%
+             ggplot(mapping = aes(sample = retornos.diarios, fill = symbol))+
+             stat_qq() +
+             labs(title = "QQ plots Retornos Activos",
+               subtitle = "Oracle (ORCL), Intel (IT), Nvidia (NVDA) y Netflix (NFLX)",
+               x = "Retornos mensuales", y = "Densidad") +
+             theme_tq() +
+             scale_fill_tq() +
+             facet_wrap(~ symbol, ncol = 2) +
+             guides(fill=guide_legend(title="Activos:"))
+    
+    ```    
+
+## Pregunta 2.2 {-}
+
+El análisis técnico consiste en detectar determinados patrones de comportamiento de los precios en el pasado, con la esperanza de que dicho patrones vuelvan a repetirse y poder así aprovecharnos de ello. A partir de lo anterior se le solicita:
+
+a. Construir un *Candlestick* para cada índice accionario y determine patrones. Comente.
+        
+    ```{r , fig.width = 6, fig.height = 3,   fig.align = "center"}
+    data_activos %>%
+         ggplot(aes(x = date, y = close, group = symbol)) +
+         geom_barchart(aes(open = open, high = high, low = low, close = close),
+           color_up = "darkgreen", color_down = "darkred", size = 1) +
+         labs(title = "Bar Chart",
+           subtitle = "DAX Alemania & FTSE 100 Reino Unido",
+           y = "Precio de Cierre", x = "") +
+        #  coord_x_date(xlim = c(end - weeks(6), end)) +
+         facet_wrap(~ symbol, ncol = 2, scale = "free_y") + 
+         theme_tq()
+    
+    ```
+        
+b. Construir las *bandas de bollinger* para cada índice accionario. Comente.
+        
+    ```{r , fig.width = 6, fig.height = 3,   fig.align = "center"}
+    data_activos %>%
+         ggplot(aes(x=date, y=close, open = open,
+                    high = high, low = low, close = close)) +
+          geom_candlestick() +
+          geom_bbands(ma_fun = SMA, sd = 2, n = 20)  +
+          labs(title = "Bandas de Bollinger ",
+               subtitle = "DAX Alemania & FTSE 100 Reino Unido",
+               y = "Precio de Cierre", x = "") +
+        #  coord_x_date(xlim = c(end - weeks(6), end)) +
+         facet_wrap(~ symbol, ncol = 2, scale = "free_y") + 
+         theme_tq()
+    ```
+
+## Pregunta 2.3 {-}
+
+Finalmente descargue desde *Yahoo Finance* el índice de volatilidad VIX^[Chicago Board Options Exchange Market Volatility Index.] desde 1990 hasta la fecha con periodicidad mensual, posteriormente gráfique identificando los periodos de recesiones^[Los periodos de recesiones se pueden descargar desde FRED (Federal Reserve Economic Data).]. ¿Qué puede observa?¿es útil este índice?.
+    
+```{r, eval = TRUE, echo = FALSE, warning=FALSE, message=FALSE}
+# font_import(pattern="[H/h]umor", prompt = TRUE)
+# loadfonts(device="win")
+
+theme_xkcd <- theme(
+  panel.background = element_rect(fill="white"),
+  #axis.ticks = element_line(colour=NA),
+  panel.grid = element_line(colour="white"),
+  #axis.text.y = element_text(colour=NA),
+  axis.text.x = element_text(colour="black"),
+  text = element_text(size=16, family="Humor Sans"),
+  axis.line = element_line(colour = "black")
+)
+```
+
+```{r}
+data_vix <- tq_get("VIXCLS",
+                   get = "economic.data",
+                   from = "1990-01-01",
+                   to  = "2018-01-01",
+                   periodicity = "daily") %>% 
+                   na.omit()
+```
+
+```{r}
+recessions_df <- read.table(textConnection("Peak, Trough
+                                           1990-07-01, 1991-03-01
+                                           2001-03-01, 2001-11-01
+                                           2007-12-01, 2009-06-01"), 
+                 sep=',',colClasses=c('Date', 'Date'), header=TRUE)
+
+recessions_trim <-  subset(recessions_df, Peak >= min(index(data_vix$date)))
+```
+
+```{r, eval = TRUE, echo=TRUE, fig.align = "center", out.height= "35%", message=FALSE,     warning=FALSE}
+data_vix %>% 
+  ggplot() + geom_line(aes(x = date, y = price), size = 0.5, color = "red") + 
+  theme_xkcd + geom_rect(data=recessions_trim, aes(xmin = Peak, 
+                                                   xmax = Trough, ymin=-Inf, ymax=+Inf), 
+                         fill='cyan', alpha=0.5) +
+  xlab("Fecha") + ylab("VIX") + labs(title = "VIX Index", 
+                                     subtitle = "Estados Unidos: 1990 - 2018") + 
+  scale_x_date(breaks = pretty_breaks(n = 12)) + 
+  theme(axis.text.x = element_text(size=14, angle=45, 
+                                   margin = margin(t = 10, r = 20, b = 10, l = 10))) 
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,210 @@
+---
+output:
+  pdf_document: default
+  html_notebook: default
+  html_document:
+    df_print: paged
+---
+\begin{center}
+			\includegraphics[width=1cm]{logo.jpg}\\
+			\LARGE{\textbf{Tópicos en Economía y Negocios Utilizando R}}\\
+			\textbf{Guía de Ejercicios 1}\\
+			\vspace{0.5cm}
+\end{center}
+
+\begin{flushright}
+  \textbf{Profesor}: \textit{Víctor Macías E.}  
+  \\
+  \textbf{Ayudante}: \textit{Gabriel Cabrera G.}  
+\end{flushright}
+
+
+#Operadores lógicos:
+
+Operador    | Descripción 
+----   |----       
+$<$  |  Menor a      
+$>$  |  Mayor a        
+$<=$ |  Menor o igual a    
+$>=$ |  Mayor o igual a       
+$==$ |  Igual a       
+$!=$ |  No igual a
+
+#Operaciones con vectores:
+
+Comando      | Descripción
+----         |-----
+length($v$)  | Determina el número de elementos del vector $v$
+min($v$)     | Determina el mínimo valor del vector $v$
+max($v$)     | Determina el máximo valor del vector $v$
+sum($v$)     | Suma elementos del vector $v$
+prod($v$)    | Multiplica elementos del vector $v$
+sort($v$)    | Ordena elementos del vector $v$
+
+#Operaciones con matrices:
+
+Comando    | Descripción 
+----   |----       
+diag($A$)  |  Captura elementos de la diagonal principal de $A$      
+t($A$)  |  Calcula la traspuesta de la matriz $A$        
+solve($A$)  |  Calcula inversa de la matriz $A$    
+$A$ + $B$  |  Suma de matrices $A$ y $B$       
+$A$ %*% $B$ |  Multiplicación de matrices $A$ y $B$       
+$A$*$B$  |  Multiplica elemento $(i,j)$ de $A$ y $B$, respectivamente
+rowSums($A$) | Suma elementos de cada fila de $A$
+colSums($A$)  | Suma elementos de cada columna de $A$
+
+
+#Pregunta 1
+(a) Genere un vector que contenga la siguiente secuencia de números de 1 al 10: ${1,2,3,...,10}$
+
+(b) Genere un vector que contenga la siguiente secuencia de números
+${1,3,5,7,9}$
+
+(c) Genere un vector del 1 al 5 que contenga 9 elementos
+
+
+#Pregunta 2
+Genere un vector que repita la letra $A$ cinco veces
+
+
+#Pregunta 3
+Genere un vector cuyos elementos sean cinco ceros 
+
+
+#Pregunta 4
+El vector $x$ contiene las edades de 5 estudiantes:
+
+x = c("Pedro"=17, "Ana"=NA, "Maya"=23, "Max"=NA, "Paula"=20)  
+
+
+(a) Defina un vector $y$ que excluya los missing values (NA).
+
+(b) Asigne las edades de Pedro y Ana a un vector $z$
+
+(c) Calcule el promedio aritmético de las edades de los 5 estudiantes
+
+(d) ¿Cuántos estudiantes tienen edades menores o iguales a 20 años?
+
+(e) Calcule la suma de las edades de los alumnos con edades menores o iguales a 20 años
+
+(f) Calcule la suma de las edades cuyos valores son distintos a NAs
+
+
+#Pregunta 5
+Para un vector $x$ definido como una secuencia de números de 1 a 100, calcule la suma de los cuadrados del inverso de cada uno de sus elementos
+
+
+#Pregunta 6
+Para un vector $z$ definido como una secuencia de números de 1 a 10, calcule la suma acumulada de sus elementos
+
+
+#Pregunta 7
+Para los siguientes vectores $a$, $b$ y $c$:
+
+$a = c(0,10,-5)$  
+
+$b = c(5,8,-4)$  
+
+$c = c(0,1,-1)$
+
+(a) Defina un vector $d$ que identifique los elementos del vector a que son menores a los correspondientes en el vector $b$
+
+(b) Asigne el segundo elemento del vector $b$ a $x$
+
+(c) Defina un nuevo vector e que incluya el segundo y tercer elementos del vector $a$
+
+(d) Nombre $L1$, $L2$ y $L3$ el primero, segundo y tercer elementos del vector $a$
+
+(e) Defina una matriz $A$ cuyas filas son los vectores $a$, $b$ y $c$
+
+
+#Pregunta 8
+A partir de los siguientes vectores $x$ e $y$,  
+
+$x = c(3,2)$
+
+$y = c(1,0)$
+
+(a) Defina una matriz $W$ de 2x2 donde ambos vectores sean las filas de la matriz y una matriz $Z$ donde ambos vectores sean las columnas de la matriz.
+
+(b) Asigne a la matriz $Z$ nombres a sus filas y columnas 
+
+
+#Pregunta 9
+A partir del vector $e = c(-1, 0, 2, 4, -2, 3)$, cree una matriz $K$ de 3x2 y una matriz $L$ de 2x3
+
+
+#Pregunta 10
+Construya una matriz identidad de 4x4
+
+
+#Pregunta 11
+A partir del vector $z=(1,4,-1,3,-2)$, construya una matriz cuyos elementos de la diagonal principal correspondan al vector $z$
+
+
+#Pregunta 12
+Calcule la traspuesta e inversa de la siguiente matriz:
+$$\mathbf{X} = \left[\begin{array}
+{rrr}
+1 & 1 & 1 \\
+3 & -2 & 1 \\
+2 & 1 & -1
+\end{array}\right]
+$$
+
+
+#Pregunta 13
+Use matrices para resolver los siguientes sistemas de ecuaciones:
+
+(a)
+$$a+b+c=6$$
+$$3a-2b+c=2$$
+$$2a+b-c=1$$
+(b)
+$$3a+4b-5c+d=10$$
+$$2a+2b+2c-d=5$$
+$$a-b+5c-5d=7$$
+$$5a+d=4$$
+
+
+#Pregunta 14
+
+(a) Genere una lista que consista de la secuencia ${8, 12, 16,..., 36}$, la palabra $hola$ y una matriz identidad de 3x3
+
+(b) Asigne el valor del primer elemento de la lista a $s$
+
+
+#Pregunta 15
+
+mes    | producto1 | producto2 | producto3
+----   |----       | -----     | -----
+Ene  |  $1,000        |  $1,000        |  $2,000
+Feb  |  $3,000        |  $2,000        |  $4,000
+Mar  |  $6,000        |  $3,000        |  $4,000
+Abr  |  $9,000        |  $5,000        |  $2,000
+May  |  $7,000        |  $9,000        |  $3,000
+Jun  |  $8,000        |  $6,000        |  $2,000
+Jul  |  $10,000       |  $4,000        |  $5,000
+
+(a) Construya dicha tabla como un data frame
+
+(b) Transforme las variables relacionadas  a ventas a formato numérico
+
+(c) Calcule estadística descriptiva básica de las ventas de cada uno de los productos
+
+(d) Describa la estructura del *dataframe* definido en (a) 
+
+(e) Presente las primeras seis observaciones del *dataframe* ventas 
+
+(f) Presente las últimas seis observaciones del *dataframe* ventas
+
+(g) Defina la tabla definida al comienzo de esta pregunta como *tibble* llamado *sales*
+
+(h) Construya una tabla con las observaciones de las variables $mes$ y $producto2$ 
+
+(i) Construya una tabla con las ventas de los meses de Enero y Marzo
+
+(j) Construya una variable $ventastot$ que sea igual a las ventas mensuales totales de los 3 productos
+
+

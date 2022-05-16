@@ -1,0 +1,442 @@
+---
+title: "Pauta Tarea 3"
+author:  <a href="https://gcabrerag.rbind.io/"> <h3> Gabriel Cabrera </h3> </a> \newline Facultad de Economía y Negocios, Universidad de Chile, Chile
+date: "2018-10-15 (updated: `r Sys.Date()`)"
+output: 
+  html_document:
+    theme: "cosmo"
+    highlight: "kate"
+    toc: true
+    css: styles.css
+    code_download: true
+    toc_depth: 2
+    toc_float:
+      collapsed: false
+      smooth_scroll: true
+    number_sections: true
+    code_folding: "show"
+    include:
+      after_body: footer.html
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval = TRUE, warning=FALSE, message=FALSE)
+```
+
+---
+
+<center> <b> Instrucciones </b> </center>
+<p>
+
+1.	Esta tarea debe ser entregada en grupos de máximo 3 personas. 
+2.	Se debe enviar una carpeta comprimida que contenga: un archivo .Rproj (proyecto en R), un script y un breve informe en R Markdown con sus resultados, incluyendo tablas, gráficos, etc., según corresponda.  El formato del infome puede ser word o pdf y se debe \textbf{incluir} el archivo Rmd.
+3.  El nombre del archivo comprimido debe ser "Tarea 3-R-Uchile Apellido 1-Apellido 2-Apellido 3".
+4.  El asunto del email con su tarea debe ser "Tarea 3-R-Uchile Apellido 1-Apellido 2-Apellido 3".
+5.	La fecha de entrega es el Sábado 13 de Octubre del 2018 hasta las 23:59 hrs al correo del curso:                      [r2018uchile@gmail.com](r2018uchile@gmail.com). 
+
+---
+
+<div class="quote-container">
+
+> “The goal is to turn data into information, and information into insight” 
+>
+> <p align="right"> -- *Carly Fiorina, CEO de HP desde 1999 hasta 2005* </p>
+
+</div>
+
+```{r, results='hide'}
+if(!require("pacman")) install.packages("pacman")
+p_load("tidyverse", "maps", "lubridate", "plotly")
+```
+
+<br>
+
+# Pregunta 1 {.tabset - .tabset-fade}
+
+## Pregunta 1.1 {-}
+
+Usted en la Tarea 1 (pregunta 1.5) tuvo que identificar el porcentaje de películas estrenadas por década. A partir del *data frame* obtenido, construya un *pie chart* usando la librería *plotly*. (*20 puntos*)
+
+```{r, eval = TRUE, echo = TRUE}
+movie_dataset <- read.csv("Datasets/movie_dataset.csv")
+
+# porcentaje de peliculas por decada 
+decade_movies <- movie_dataset %>% 
+                 na.omit() %>% 
+                 mutate(year = year(release_date), decade = year - year%%10, n = n()) %>% 
+                 group_by(decade, n) %>% 
+                 summarise(n()) %>% 
+                 mutate(percentage = `n()`/n) %>% 
+                 mutate(label = paste0("Década ",decade))
+```
+
+```{r}
+p <- plot_ly(decade_movies, labels = ~ label, values = ~percentage, type = "pie",
+              textposition = "inside",
+              textinfo = "percent",
+              hoverinfo = 'text',
+              text = ~ paste('%', round(percentage*100, 2)),
+              marker = list(colors = colors,
+                      line = list(color = '#FFFFFF', width = 1))) %>%
+         layout(title = "Porcentaje de películas por década",
+         xaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE),
+         yaxis = list(showgrid = FALSE, zeroline = FALSE, showticklabels = FALSE))
+p
+```
+
+
+## Pregunta 1.2 {-}
+
+Considerando la Tarea 1 (pregunta 1.6), indentifique el presupuesto promedio (*budget*) por estado y presentelo esta vez utilizando el mapa de los Estados Unidos.  (*20 puntos*)
+
+```{r}
+# cargamos la lista y la transformas a character
+lista_estados <- read.csv("Datasets/estados.csv") %>% 
+                 as.matrix() %>% 
+                 as.character()
+```
+
+```{r, eval = TRUE, echo = TRUE}
+# Promedio de presupuesto por estado de Estados Unidos
+keywords <- read.csv("Datasets/keywords.csv")
+
+peliculas_estado <- keywords %>%                                 
+                    filter(keywords %in% lista_estados) %>%
+                    right_join(movie_dataset, by = "id") %>% 
+                    group_by(keywords) %>%                   
+                    summarise(count=n(), mean(budget)) %>%                
+                    mutate(nombre_estado=keywords) %>%       
+                    right_join(                             
+                      tibble(nombre_estado=lista_estados),  
+                      by="nombre_estado"                    
+                    ) %>%                                 
+                    dplyr::select(nombre_estado, count, `mean(budget)`) %>%        
+                    mutate(
+                      count=ifelse(is.na(count),0,count)    
+                    ) %>%
+                    rename("presupuesto" = `mean(budget)`) %>% 
+                    arrange(desc(count))   
+```
+
+```{r}
+mapa_estados <- map_data("state")  
+```
+
+```{r}
+state_name<- aggregate(cbind(long,lat) ~ region, data = mapa_estados, mean)
+```
+
+```{r, fig.width=12, fig.height=8}
+g1 <- ggplot(peliculas_estado) + 
+      geom_map(aes(map_id = nombre_estado, fill = presupuesto/1000000), map = mapa_estados, color = "white") + 
+      expand_limits(x = mapa_estados$long, y = mapa_estados$lat) +
+      labs(title ="Presupuesto promedio por Estados", subtitle = "Estados Unidos") +  xlab("") + ylab("") +
+      theme_bw() + coord_map("albers", lat0=39, lat1=45) +
+      scale_fill_gradientn("Budget ($MM)", colours = rev(rainbow(4))) +
+      geom_text(data = state_name, aes(label =  as.character(region), x = long, y = lat), size = 2.5) 
+g1
+```
+
+
+<br>
+
+# Pregunta 2 {.tabset -} 
+
+A partir de las variables seleccionadas del *World Development Indicators* de su Tarea 2, represente en un mapa los valores que asume cada variable en 1990 y 2015.
+
+```{r, warning=FALSE, message=FALSE}
+if(!require("pacman")) install.packages("pacman")
+p_load("tidyverse", "WDI", "gridExtra", "grid", "scales", "maps", "ggthemes", "gganimate")
+```
+
+```{r}
+world <- ggplot() + borders("world", colour = "black", fill = "gray80") + theme_map() + 
+         coord_cartesian(ylim = c(-50, 90)) 
+```
+
+```{r, eval=TRUE, echo=TRUE, message=FALSE, warning=FALSE}
+#"NY.GDP.PCAP.PP.CD" -> PIB PPP
+#"BN.CAB.XOKA.GD.ZS" -> balance cuenta corriente como porcentaje del pib
+
+wdi_data <- as.tibble(
+            WDI(indicator = c("NY.GDP.PCAP.PP.CD", "BN.CAB.XOKA.GD.ZS"), 
+                country = "all", 
+                extra = TRUE, 
+                start = 1990, 
+                end = 2015)
+            )
+```
+
+```{r, eval = TRUE, echo = TRUE}
+#"NY.GDP.PCAP.PP.CD" -> PIB PPP
+#"BN.CAB.XOKA.GD.ZS" -> balance cuenta corriente como porcentaje del pib
+
+wdi_data <- wdi_data %>% 
+            dplyr::select(country:region) %>%
+            dplyr::rename(pib = NY.GDP.PCAP.PP.CD, 
+                          cuenta_corriente = BN.CAB.XOKA.GD.ZS) %>% 
+            dplyr::filter( year %in% c("1990", "2015") & region != "Aggregates") %>% 
+            na.omit() %>% 
+            group_by(country, year) %>% 
+            arrange(year)
+
+```
+
+```{r}
+wdi_data_pib <- wdi_data %>%
+                dplyr::select(pib,year,country) %>% 
+                rename(region = country) 
+
+wdi_data_cc <- wdi_data %>%
+               dplyr::select(cuenta_corriente,year,country) %>% 
+               rename(region = country) 
+```
+
+```{r}
+world_map <- map_data("world") %>% 
+             left_join(wdi_data_pib, by = "region") 
+  
+world_map_animate <- world_map %>% 
+                     dplyr::select(long, lat, group, year, pib, region) %>% 
+                     arrange(year)
+
+init <- tibble(
+          year = 1990,
+          pib = 0, long = 0, lat = 0
+        )
+
+fin <- tibble(
+          year = 2015,
+          pib = 0, long = 0, lat = 0
+        )
+
+map_animate <- world + 
+               geom_polygon(data = world_map_animate, 
+                            aes(x = long, y = lat, group = group, fill = pib/1000,
+                                frame = year, cumulative = FALSE), alpha = 0.5) + 
+               geom_polygon(data = init, aes(x = long, y = lat, fill = pib,
+                                frame = year, cumulative = FALSE), alpha = 0) +
+               geom_polygon(data = fin, 
+                            aes(x = long, y = lat, fill = pib, frame = year,
+                                cumulative = FALSE), alpha = 0) + 
+               labs(title = "Producto Interno Bruto, ") +
+               labs(fill = 'PIB (k)') + 
+               labs(caption = 
+                    "Mapa por Gabriel Cabrera, @Gabo_Cg\nFuente: World Development Indicators") +
+               theme(plot.title = element_text(hjust = 0.5, vjust = 0.05, size=25)) +
+               theme(plot.caption = element_text(hjust = 0, color="gray40", size=15)) +
+               theme(legend.position = c(.5, -.025), 
+               legend.direction = "horizontal", 
+               legend.title.align = 0,
+               legend.key.size = unit(1.3, "cm"),
+               legend.title=element_text(size=17), 
+               legend.text=element_text(size=13))
+
+gganimate(map_animate, interval = 0.2, title_frame =T, ani.width=1600, ani.height=820, 
+          dpi=800, "pib_1990_2015.gif")
+```
+
+<br>
+
+<center>
+
+![Mapa Producto Interno Bruto](pib_1990_2015.gif)
+
+</center>
+
+```{r}
+wdi_data_pib <- wdi_data %>%
+                dplyr::select(pib,year,country) %>% 
+                rename(region = country) 
+
+wdi_data_cc <- wdi_data %>%
+               dplyr::select(cuenta_corriente,year,country) %>% 
+               rename(region = country) 
+```
+
+```{r}
+world_map <- map_data("world") %>% 
+             left_join(wdi_data_cc, by = "region") 
+  
+world_map_animate <- world_map %>% 
+                     dplyr::select(long, lat, group, year, cuenta_corriente, region) %>% 
+                     arrange(year)
+
+init <- tibble(
+          year = 1990,
+          cuenta_corriente = 0, long = 0, lat = 0
+        )
+
+fin <- tibble(
+          year = 2015,
+          cuenta_corriente = 0, long = 0, lat = 0
+        )
+
+map_animate <- world + 
+               geom_polygon(data = world_map_animate, 
+                            aes(x = long, y = lat, group = group, fill = cuenta_corriente,
+                                frame = year, cumulative = FALSE),  alpha = 0.5) + 
+               geom_polygon(data = init, 
+                            aes(x = long, y = lat, fill = cuenta_corriente,
+                                frame = year, cumulative = FALSE), alpha = 0) +
+               geom_polygon(data = fin, 
+                            aes(x = long, y = lat, fill = cuenta_corriente,
+                                frame = year, cumulative = FALSE), alpha = 0) + 
+               labs(title = "Cuenta Corriente, ") +
+               labs(fill = 'CC') + 
+               labs(caption = 
+                   "Mapa por Gabriel Cabrera, @Gabo_Cg\nFuente: World Development Indicators") +
+               theme(plot.title = element_text(hjust = 0.5, vjust = 0.05, size=25)) +
+               theme(plot.caption = element_text(hjust = 0, color="gray40", size=15)) +
+               theme(legend.position = c(.5, -.025), 
+               legend.direction = "horizontal", 
+               legend.title.align = 0,
+               legend.key.size = unit(1.3, "cm"),
+               legend.title=element_text(size=17), 
+               legend.text=element_text(size=13))
+
+
+gganimate(map_animate, interval = 0.2,title_frame =T, ani.width=1600, ani.height=820, 
+          dpi=800,"CC_1990_2015.gif")
+```
+
+<br>
+
+<center>
+
+![Mapa Cuenta Corriente](CC_1990_2015.gif)
+
+</center>
+
+<br>
+
+# Pregunta 3 {.tabset -} 
+
+Visite el sitio web [http://datos.gob.cl/](http://datos.gob.cl/) y descargue una base de datos de su preferencia^[Debe contener las comunas de la región Metropolitana.], justificando su elección. Luego, represente los datos seleccionados en un mapa de una o varias de las comunas de la región Metropolitana. Los mapas vectoriales pueden ser descargados de [https://www.bcn.cl](https://www.bcn.cl/siit/mapas_vectoriales).
+
+```{r, warning=FALSE, message=FALSE}
+# cargamos librerias 
+if(!require("pacman")) install.packages("pacman") 
+p_load("ggmap","tidyverse","rgdal", "sp", "tmaptools", "broom", "raster", "readxl" , 
+       "ggthemes", "splitstackshape", "DT")
+```
+
+```{r, warning=FALSE, message=FALSE, results='hide'}
+division_comunal <- readOGR(dsn = "Datasets/division_comunal", layer="division_comunal")
+datatable(division_comunal@data, class = 'cell-border stripe',extensions = 'FixedColumns', 
+          options = list( dom = 't', scrollX = TRUE, scrollCollapse = TRUE))
+```
+
+```{r}
+datatable(head(division_comunal@data[division_comunal$NOM_PROV %in% c("Santiago"), ],7), 
+    class = 'cell-border stripe', extensions = 'FixedColumns', options = list(
+          dom = 't', scrollX = TRUE, scrollCollapse = TRUE))
+
+select_prov <- division_comunal$NOM_PROV %in% c("Santiago")
+comunas <- fortify(division_comunal[select_prov,], region="NOM_COM") %>% 
+           rename(COMUNA = id) 
+
+comunas$COMUNA <- tolower(comunas$COMUNA)
+```
+
+```{r}
+gasto_mop <- read_xlsx("Datasets/gasto_mop.xlsx")
+
+gasto_mop <- gasto_mop %>% 
+             filter(`REGIÓN` == "Metropolitana") %>%  
+             dplyr::select(COMUNA, `AÑO`, `INVERSIÓN (MILES DE $ DE CADA AÑO)`, `REGIÓN`) %>% 
+             rename(inversion = `INVERSIÓN (MILES DE $ DE CADA AÑO)`)
+
+gasto_mop$COMUNA <- tolower(gasto_mop$COMUNA )
+
+```
+
+
+```{r}
+mop <- gasto_mop %>% 
+       group_by(COMUNA) %>% 
+       filter(row_number(COMUNA) == 1) %>% 
+       dplyr::select(COMUNA, inversion, `AÑO`) 
+            
+mop <- cSplit(mop, "COMUNA", sep = ", ", direction = "long")
+mop <- cSplit(mop, "COMUNA", sep = " y ", direction = "long")[-1]
+
+data <- mop %>% 
+        left_join(comunas, by = "COMUNA") 
+
+com_name <- aggregate(cbind(long,lat) ~ COMUNA, data = data, mean)
+```
+
+
+```{r, message=FALSE, warning=FALSE}
+data <- data %>% 
+        rename(year = `AÑO`) %>% 
+        na.omit()
+
+init <- tibble(
+          year = 2011,
+          inversion = 0, long = 0, lat = 0
+        )
+
+fin <- tibble(
+          year = 2016,
+          inversion = 0, long = 0, lat = 0
+        )
+
+map_animate <- ggplot() + 
+               geom_polygon(data = comunas, aes(x = long, y = lat, group = group), 
+                   fill = "white", color = "black", size = .5, show.legend = FALSE)  + 
+               theme_map() + 
+               xlim(min(comunas$long),max(comunas$long)) + ylim(min(comunas$lat),
+                    max(comunas$lat)) +
+               geom_polygon(data = data, 
+                            aes(x = long, y = lat, group = group, fill = inversion/1000000,
+                                frame = year,
+                                cumulative = TRUE), 
+                            alpha = 0.5) + 
+               geom_polygon(data = init, 
+                            aes(x = long, y = lat, fill = inversion/1000000,
+                                frame = year,
+                                cumulative = TRUE), 
+                            alpha = 0) +
+               geom_polygon(data = fin, 
+                            aes(x = long, y = lat, fill = inversion/1000000,
+                                frame = year,
+                                cumulative = TRUE), 
+                            alpha = 0) + 
+               labs(title = "Gasto MOP, ") +
+               labs(fill = 'Gasto (MIllones)') + 
+               labs(caption = 
+                    "Mapa por Gabriel Cabrera, @Gabo_Cg\nFuente: Datos Gobierno de Chile") +
+               theme(plot.title = element_text(hjust = 0.5, vjust = 0.05, size=25)) +
+               theme(plot.caption = element_text(hjust = 0, color="gray40", size=15)) +
+               theme(legend.position = c(.5, -.025), 
+               legend.direction = "horizontal", 
+               legend.title.align = 0,
+               legend.key.size = unit(1.3, "cm"),
+               legend.title=element_text(size=17), 
+               legend.text=element_text(size=13)) + 
+               geom_text(data = com_name, aes(label =  as.character(COMUNA), x = long, 
+                                               y = lat), size = 3.5) 
+
+gganimate(map_animate, interval = 0.2, title_frame =T, ani.width=1600, ani.height=1020, 
+          dpi=850, "mop_2011_2016.gif")
+```
+
+<br>
+
+<center>
+
+![Gasto Ministerio de obras públicas: Periodo 2011 - 2016](mop_2011_2016.gif)
+
+</center>
+
+<br>
+
+
+
+
+
+
+
